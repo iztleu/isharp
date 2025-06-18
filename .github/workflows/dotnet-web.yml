@@ -17,6 +17,14 @@ jobs:
         
       - name: Build
         run: dotnet build --configuration Release --no-restore
+      
+      - name: Replace piranha connection string in appsettings.json
+        run: |
+          $file = "appsettings.json"
+          $json = Get-Content $file -Raw | ConvertFrom-Json
+          $json.ConnectionStrings.piranha = "${{ secrets.DB_CONNECTION_STRING_PIRANHA }}"
+          $json | ConvertTo-Json -Depth 10 | Set-Content $file -Encoding UTF8
+        shell: pwsh
 
       - name: Publish
         run: dotnet publish --configuration Release --output ./publish --runtime win-x86 
