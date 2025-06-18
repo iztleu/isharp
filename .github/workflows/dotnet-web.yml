@@ -1,4 +1,5 @@
 name: Build, publish and deploy to MonsterASP.NET
+
 on: [push]
 
 jobs:
@@ -7,30 +8,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0
-          
+          dotnet-version: 9.0.301
+
       - name: Install dependencies
-        run: dotnet restore
-        
+        run: dotnet restore Isharp.sln
+
       - name: Build
-        run: dotnet build --configuration Release --no-restore
-      
-      - name: Replace piranha connection string in appsettings.json
+        run: dotnet build Isharp.sln --configuration Release --no-restore
+
+      - name: Replace piranha connection string
+        shell: pwsh
         run: |
-          $file = "appsettings.json"
+          $file = "Isharp/appsettings.json"
           $json = Get-Content $file -Raw | ConvertFrom-Json
           $json.ConnectionStrings.piranha = "${{ secrets.DB_CONNECTION_STRING_PIRANHA }}"
           $json | ConvertTo-Json -Depth 10 | Set-Content $file -Encoding UTF8
-        shell: pwsh
 
       - name: Publish
-        run: dotnet publish --configuration Release --output ./publish --runtime win-x86 
-        
+        run: dotnet publish Isharp/Isharp.csproj --configuration Release --output ./publish --runtime win-x86 --no-restore
+
       - name: Test with .NET
-        run: dotnet test
+        run: dotnet test Isharp.sln
 
       - name: Deploy to MonsterASP.NET via WebDeploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0
